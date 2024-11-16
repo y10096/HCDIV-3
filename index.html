@@ -25,18 +25,20 @@
         .legend {
             font-size: 12px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
+
+        /* Tooltip 样式 */
+        .tooltip {
+            position: absolute;
             text-align: center;
-        }
-        th {
-            background-color: #f2f2f2;
+            width: 120px;
+            height: 50px;
+            padding: 8px;
+            font-size: 12px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
         }
     </style>
 </head>
@@ -45,23 +47,14 @@
 <h2>2012年3月到2013年3月转售价格折线图</h2>
 <svg width="960" height="500"></svg>
 
-<!-- 表格区域 -->
-<h3>数据表格</h3>
-<table id="data-table">
-    <thead>
-        <tr>
-            <th>地区</th>
-            <th>月份</th>
-            <th>平均转售价格</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
+<!-- Tooltip 元素 -->
+<div class="tooltip" id="tooltip"></div>
 
 <script>
 d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014%20(1).csv").then(function(data) {
 
-    const parseDate = d3.timeParse("%Y/%m/%d");
+    // 修改日期解析格式为 Nov-13（%b-%y）
+    const parseDate = d3.timeParse("%b-%y");  // "Nov-13" 格式
 
     const selectedRegions = ["WOODLANDS", "JURONG WEST", "TAMPINES", "YISHUN", "BEDOK", "SENGKANG", "HOUGANG", "ANG MO KIO"];
     
@@ -144,7 +137,7 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
             )
             .style("stroke", getColor(region.key));
 
-        // 绘制每个数据点
+        // 绘制每个数据点并添加鼠标悬停事件
         svg.selectAll(".dot")
             .data(region.values)
             .enter().append("circle")
@@ -152,7 +145,19 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
             .attr("cx", d => x(parseDate(d.key)))
             .attr("cy", d => y(d.value))
             .attr("r", 5)
-            .style("fill", getColor(region.key));
+            .style("fill", getColor(region.key))
+            .on("mouseover", function(event, d) {
+                // 显示 tooltip
+                const tooltip = d3.select("#tooltip");
+                tooltip.transition().duration(200).style("opacity", 0.9);
+                tooltip.html(`${d.key}<br/>${d3.timeFormat("%b-%y")(parseDate(d.key))}<br/>Avg Price: ${d.value}`)
+                    .style("left", (event.pageX + 5) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                // 隐藏 tooltip
+                d3.select("#tooltip").transition().duration(200).style("opacity", 0);
+            });
     });
 
     // 创建图例
@@ -190,16 +195,8 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
         return colors[region] || "gray";
     }
 
-    // 将数据表格添加到页面
-    const tableBody = d3.select("#data-table tbody");
-    allData.forEach(d => {
-        tableBody.append("tr")
-            .html(`<td>${d.town}</td><td>${d3.timeFormat("%Y/%m")(d.month)}</td><td>${d.resale_price}</td>`);
-    });
-
 });
 </script>
 
 </body>
 </html>
-

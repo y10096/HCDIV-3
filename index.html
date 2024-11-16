@@ -45,9 +45,9 @@
 
             // 2. 处理数据，按月份和镇子计算平均价格
             data.forEach(d => {
-                let month = d["Month"];
-                let town = d["Town"];
-                let price = +d["Resale Price"];
+                let month = d["month"];
+                let town = d["town"];
+                let price = +d["resale_price"];  // 确保转售价格是数字
 
                 if (!town || !month || !price) return;
 

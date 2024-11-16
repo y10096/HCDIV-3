@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Average resale price bar chart</title>
+    <title>Average resale price bar chart2.0</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
@@ -12,7 +12,7 @@
         }
         .chart {
             width: 100%;
-            height: 1000px; /* 高度调整为原来的两倍 */
+            height: 1000px;
             text-align: center;
         }
         .axis-label {
@@ -36,16 +36,24 @@
     <script>
         // 1. 加载并解析 CSV 数据
         d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014%20(1).csv").then(function(data) {
+            console.log("原始数据：", data); // 打印原始数据以检查
+
+            // 解析日期格式： "Mar-12" -> "2012-03-01"
+            let parseMonth = d3.timeParse("%b-%y");  // %b-%y: "Mar-12", "May-12"等
+            let startDate = parseMonth("Mar-12");
+            let endDate = parseMonth("Mar-13");
+
             // 数据预处理
             let towns = new Set();
             let pricesByMonth = {};
 
             // 2. 处理数据，按月份和镇子计算平均价格
-            // 只保留2012年3月到2013年3月的数据
             let filteredData = data.filter(d => {
-                let month = new Date(d["month"]);
-                return month >= new Date("2012-03-01") && month <= new Date("2013-03-31");
+                let month = parseMonth(d["month"]);
+                return month >= startDate && month <= endDate;
             });
+
+            console.log("筛选后的数据：", filteredData); // 打印筛选后的数据
 
             filteredData.forEach(d => {
                 let month = d["month"];
@@ -77,8 +85,10 @@
                 }
             }
 
+            console.log("按月平均价格：", avgPricesByMonth); // 打印按月计算的平均价格
+
             // 获取月份的排序
-            let months = Object.keys(avgPricesByMonth).sort((a, b) => new Date(a) - new Date(b));
+            let months = Object.keys(avgPricesByMonth).sort((a, b) => parseMonth(a) - parseMonth(b));
 
             // 4. 设置 D3 绘图参数
             let margin = { top: 40, right: 30, bottom: 60, left: 50 },
@@ -126,6 +136,8 @@
                     price: avgPricesByMonth[month][town] || 0
                 }));
 
+                console.log("镇子 " + town + " 的数据：", townData); // 打印每个镇的数据
+
                 svg.selectAll(".bar-" + town)
                     .data(townData)
                     .enter()
@@ -151,5 +163,3 @@
     </script>
 </body>
 </html>
-
-

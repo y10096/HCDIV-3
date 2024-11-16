@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Average Resale Price Line Chart2</title>
+    <title>Average Resale Price Line Chart</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
@@ -43,17 +43,20 @@
             let startDate = parseMonth("Mar-12");
             let endDate = parseMonth("Mar-13");
 
-            // 数据预处理
-            let towns = new Set();
-            let pricesByMonth = {};
+            // 2. 筛选需要的镇名
+            let selectedTowns = ["WOODLANDS", "JURONG WEST", "TAMPINES", "YISHUN", "BEDOK", "SENGKANG"];
 
-            // 2. 处理数据，按月份和镇子计算平均价格
+            // 数据预处理：筛选出这些镇的数据，并且时间在 2012年3月到2013年3月之间
             let filteredData = data.filter(d => {
                 let month = parseMonth(d["month"]);
-                return month >= startDate && month <= endDate;
+                return month >= startDate && month <= endDate && selectedTowns.includes(d["town"]);
             });
 
             console.log("筛选后的数据：", filteredData); // 打印筛选后的数据
+
+            // 数据处理：按月份和镇子计算平均价格
+            let towns = new Set();
+            let pricesByMonth = {};
 
             filteredData.forEach(d => {
                 let month = d["month"];

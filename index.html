@@ -8,22 +8,33 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center; /* 水平居中 */
+            align-items: center;     /* 垂直居中 */
+            height: 100vh;           /* 设置页面的高度为视口高度 */
+            background-color: #f4f4f4; /* 可选：设置背景色 */
         }
-        .chart {
-            width: 100%;
-            height: 1000px;
+
+        .chart-container {
+            width: 90%; /* 使图表宽度自适应 */
+            max-width: 1200px; /* 限制最大宽度 */
+            height: 600px;  /* 设置图表容器的高度 */
         }
+
         .line {
             fill: none;
             stroke-width: 2;
         }
+
         .axis-label {
             font-size: 12px;
         }
+
         .tooltip {
             position: absolute;
-            background-color: rgba(0,0,0,0.7);
+            background-color: rgba(0, 0, 0, 0.7);
             color: white;
             padding: 5px;
             border-radius: 3px;
@@ -32,8 +43,7 @@
     </style>
 </head>
 <body>
-    <h1>Average Resale Prices by Town, March 2012 to March 2013 Line Chart</h1>
-    <div class="chart" id="chart"></div>
+    <div class="chart-container" id="chart"></div>
     <div class="tooltip" id="tooltip"></div>
 
     <script>
@@ -43,8 +53,14 @@
             let towns = new Set();
             let pricesByMonth = {};
 
-            // 2. 处理数据，按月份和镇子计算平均价格
-            data.forEach(d => {
+            // 2. 筛选出 2012年3月到2013年3月的数据
+            let filteredData = data.filter(d => {
+                let month = new Date(d["month"]);
+                return month >= new Date("2012-03-01") && month <= new Date("2013-03-31");
+            });
+
+            // 3. 处理数据，按月份和镇子计算平均价格
+            filteredData.forEach(d => {
                 let month = d["month"];
                 let town = d["town"];
                 let price = +d["resale_price"];  // 确保转售价格是数字
@@ -63,7 +79,7 @@
                 pricesByMonth[month][town].push(price);
             });
 
-            // 3. 计算每个镇子的平均价格
+            // 4. 计算每个镇子的平均价格
             let avgPricesByMonth = {};
             for (let month in pricesByMonth) {
                 avgPricesByMonth[month] = {};
@@ -77,9 +93,9 @@
             // 获取月份的排序
             let months = Object.keys(avgPricesByMonth).sort((a, b) => new Date(a) - new Date(b));
 
-            // 4. 设置 D3 绘图参数，动态调整宽高
-            let margin = { top: 40, right: 30, bottom: 60, left: 50 },
-                width = window.innerWidth - margin.left - margin.right,  // 动态获取屏幕宽度
+            // 5. 设置 D3 绘图参数
+            let margin = { top: 40, right: 30, bottom: 60, left: 80 },
+                width = document.querySelector('.chart-container').clientWidth - margin.left - margin.right,
                 height = 500 - margin.top - margin.bottom;
 
             let svg = d3.select("#chart").append("svg")
@@ -88,7 +104,7 @@
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            // 5. 创建 x 和 y 轴比例尺
+            // 6. 创建 x 和 y 轴比例尺
             let x = d3.scaleBand()
                 .domain(months)
                 .range([0, width])
@@ -99,7 +115,7 @@
                 .nice()
                 .range([height, 0]);
 
-            // 6. 添加 x 和 y 轴
+            // 7. 添加 x 和 y 轴
             svg.append("g")
                 .selectAll(".x-axis")
                 .data(months)
@@ -124,7 +140,7 @@
                 .attr("y2", y)
                 .attr("stroke", "black");
 
-            // 7. 绘制折线
+            // 8. 绘制折线
             let color = d3.scaleOrdinal(d3.schemeCategory10);
             towns.forEach((town, index) => {
                 let line = d3.line()
@@ -174,4 +190,3 @@
     </script>
 </body>
 </html>
-

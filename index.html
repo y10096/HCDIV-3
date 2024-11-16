@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resale price line graph</title>
+    <title>转售价格折线图</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <style>
         .line {
@@ -24,7 +24,7 @@
 </head>
 <body>
 
-<h2>Resale price line graph from MAR 2012 to MAR 2013</h2>
+<h2>2012年3月到2013年3月转售价格折线图</h2>
 <svg width="960" height="500"></svg>
 
 <script>
@@ -37,14 +37,14 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
     // 过滤出特定时间范围和地区
     const selectedRegions = ["WOODLANDS", "JURONG WEST", "TAMPINES", "YISHUN", "BEDOK", "SENGKANG", "HOUGANG", "ANG MO KIO"];
     data = data.filter(d => 
-        selectedRegions.includes(d.street_name) && 
+        selectedRegions.includes(d.town) && 
         parseDate(d.month) >= new Date("2012-03-01") &&
         parseDate(d.month) <= new Date("2013-03-31")
     );
 
     // 转换价格为数字，月份为日期格式
     data.forEach(d => {
-        d.price = +d.price; // 转换为数字
+        d.resale_price = +d.resale_price; // 转换为数字
         d.month = parseDate(d.month); // 使用 d3.timeParse 解析日期
     });
 
@@ -66,7 +66,7 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
         .range([0, width]);
 
     const y = d3.scaleLinear()
-        .domain([d3.min(data, d => d.price), d3.max(data, d => d.price)])
+        .domain([d3.min(data, d => d.resale_price), d3.max(data, d => d.resale_price)])
         .nice()
         .range([height, 0]);
 
@@ -82,13 +82,13 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
 
     // 7. 创建一个字典，用于存储每个地区的数据
     const regions = d3.nest()
-        .key(d => d.street_name)
+        .key(d => d.town)
         .entries(data);
 
     // 8. 创建折线图
     const line = d3.line()
         .x(d => x(d.month))
-        .y(d => y(d.price));
+        .y(d => y(d.resale_price));
 
     // 绘制每个地区的折线
     regions.forEach(region => {
@@ -138,3 +138,5 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
 
 </body>
 </html>
+
+

@@ -13,6 +13,7 @@
         .chart {
             width: 100%;
             height: 1000px; /* 高度调整为原来的两倍 */
+            text-align: center;
         }
         .axis-label {
             font-size: 12px;
@@ -101,24 +102,21 @@
                 .nice()
                 .range([height, 0]);
 
-            // 6. 添加 x 轴
+            // 6. 添加 X 轴
             svg.append("g")
-                .selectAll(".x-axis")
-                .data(months)
-                .enter()
-                .append("text")
-                .attr("x", d => x(d) + x.bandwidth() / 2)
-                .attr("y", height + 20)
-                .attr("text-anchor", "middle")
-                .text(d => d)
+                .attr("class", "x-axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x))
+                .selectAll("text")
                 .style("font-size", "12px")
-                .style("transform", "rotate(-45deg)")  // 旋转标签，避免重叠
+                .style("text-anchor", "middle")
+                .style("transform", "rotate(-45deg)")
                 .style("transform-origin", "center");
 
-            // 7. 添加 y 轴
+            // 7. 添加 Y 轴
             svg.append("g")
-                .call(d3.axisLeft(y))  // 绘制Y轴
-                .attr("class", "y-axis");
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(y));
 
             // 8. 绘制柱状图
             let color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -133,11 +131,11 @@
                     .enter()
                     .append("rect")
                     .attr("class", "bar")
-                    .attr("x", d => x(d.month))
-                    .attr("y", d => y(d.price))
-                    .attr("width", x.bandwidth())
-                    .attr("height", d => height - y(d.price))
-                    .attr("fill", color(index))
+                    .attr("x", d => x(d.month))  // X位置
+                    .attr("y", d => y(d.price))  // Y位置（价格）
+                    .attr("width", x.bandwidth())  // 宽度
+                    .attr("height", d => height - y(d.price))  // 高度
+                    .attr("fill", color(index))  // 填充颜色
                     .on("mouseover", function(event, d) {
                         d3.select("#tooltip")
                             .style("left", (event.pageX + 10) + "px")
@@ -153,4 +151,5 @@
     </script>
 </body>
 </html>
+
 

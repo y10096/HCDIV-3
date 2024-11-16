@@ -54,30 +54,30 @@
     <div id="legend" class="legend"></div>
 
     <script>
-        // 1. 加载并解析 CSV 数据
+        
         d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014%20(1).csv").then(function(data) {
-            // 解析日期格式： "Mar-12" -> "2012-03-01"
+            
             let parseMonth = d3.timeParse("%b-%y");  // %b-%y: "Mar-12", "May-12"等
             let startDate = parseMonth("Mar-12");
             let endDate = parseMonth("Mar-13");
 
-            // 2. 筛选需要的镇名
+            
             let selectedTowns = ["WOODLANDS", "JURONG WEST", "TAMPINES", "YISHUN", "BEDOK", "SENGKANG"];
 
-            // 数据预处理：筛选出这些镇的数据，并且时间在 2012年3月到2013年3月之间
+            
             let filteredData = data.filter(d => {
                 let month = parseMonth(d["month"]);
                 return month >= startDate && month <= endDate && selectedTowns.includes(d["town"]);
             });
 
-            // 数据处理：按月份和镇子计算平均价格
+            
             let towns = new Set();
             let pricesByMonth = {};
 
             filteredData.forEach(d => {
                 let month = d["month"];
                 let town = d["town"];
-                let price = +d["resale_price"];  // 确保转售价格是数字
+                let price = +d["resale_price"];  
 
                 if (!town || !month || !price) return;
 
@@ -93,7 +93,7 @@
                 pricesByMonth[month][town].push(price);
             });
 
-            // 计算每个镇子的平均价格
+            
             let avgPricesByMonth = {};
             for (let month in pricesByMonth) {
                 avgPricesByMonth[month] = {};
@@ -104,13 +104,13 @@
                 }
             }
 
-            // 获取月份的排序
+            
             let months = Object.keys(avgPricesByMonth).sort((a, b) => parseMonth(a) - parseMonth(b));
 
-            // 4. 设置 D3 绘图参数
+            
             let margin = { top: 40, right: 30, bottom: 100, left: 50 },
-                width = 1600 - margin.left - margin.right,  // 宽度设置为 2000px
-                height = 800 - margin.top - margin.bottom; // 高度设置为 1000px
+                width = 1600 - margin.left - margin.right,  
+                height = 800 - margin.top - margin.bottom; 
 
             let svg = d3.select("#chart").append("svg")
                 .attr("width", width + margin.left + margin.right)
@@ -118,7 +118,7 @@
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            // 5. 创建 x 和 y 轴比例尺
+            
             let x = d3.scalePoint()
                 .domain(months)
                 .range([0, width])
@@ -129,20 +129,20 @@
                 .nice()
                 .range([height, 0]);
 
-            // 6. 添加 X 轴
+            
             svg.append("g")
                 .attr("class", "x-axis")
                 .attr("transform", "translate(0," + height + ")")
                 .call(d3.axisBottom(x));
 
-            // 7. 添加 Y 轴
+            
             svg.append("g")
                 .attr("class", "y-axis")
                 .call(d3.axisLeft(y));
 
-            // 8. 绘制折线图
+            
             let color = d3.scaleOrdinal(d3.schemeCategory10);
-            let legendData = [];  // 用来保存每个 town 的颜色和名称
+            let legendData = [];  
 
             towns.forEach((town, index) => {
                 let townData = months.map(month => ({
@@ -151,14 +151,14 @@
                 }));
 
                 let line = d3.line()
-                    .x(d => x(d.month))  // X位置
-                    .y(d => y(d.price));  // Y位置（价格）
+                    .x(d => x(d.month))  
+                    .y(d => y(d.price));  
 
                 svg.append("path")
                     .data([townData])
                     .attr("class", "line")
                     .attr("d", line)
-                    .attr("stroke", color(index))  // 设置线条颜色
+                    .attr("stroke", color(index))  
                     .attr("stroke-width", 2)
                     .attr("fill", "none")
                     .on("mouseover", function(event) {
@@ -168,10 +168,10 @@
                         d3.select(this).attr("stroke-width", 2);
                     });
 
-                // 保存颜色和名称
+                
                 legendData.push({ town: town, color: color(index) });
 
-                // 绘制点
+                
                 svg.selectAll(".dot-" + town)
                     .data(townData)
                     .enter()
@@ -193,7 +193,7 @@
                     });
             });
 
-            // 9. 添加图例
+            
             let legend = d3.select("#legend");
 
             legendData.forEach((d, i) => {

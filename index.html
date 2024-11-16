@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Average Resale Price Line Chart5</title>
+    <title>Average Resale Price Line Chart</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
@@ -12,7 +12,7 @@
             text-align: center;
         }
         .chart {
-            width: 100%;
+            width: 80%;
             height: 800px;
         }
         .axis-label {
@@ -26,18 +26,32 @@
             border-radius: 3px;
             display: none;
         }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
-    <h1>Average Resale Prices by Town, March 2012 to March 2013 Line Chart5</h1>
+    <h1>Average Resale Prices by Town, March 2012 to March 2013 Line Chart</h1>
     <div class="chart" id="chart"></div>
     <div class="tooltip" id="tooltip"></div>
+    <div id="legend" class="legend"></div>
 
     <script>
         // 1. 加载并解析 CSV 数据
         d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014%20(1).csv").then(function(data) {
-            console.log("原始数据：", data); // 打印原始数据以检查
-
             // 解析日期格式： "Mar-12" -> "2012-03-01"
             let parseMonth = d3.timeParse("%b-%y");  // %b-%y: "Mar-12", "May-12"等
             let startDate = parseMonth("Mar-12");
@@ -51,8 +65,6 @@
                 let month = parseMonth(d["month"]);
                 return month >= startDate && month <= endDate && selectedTowns.includes(d["town"]);
             });
-
-            console.log("筛选后的数据：", filteredData); // 打印筛选后的数据
 
             // 数据处理：按月份和镇子计算平均价格
             let towns = new Set();
@@ -77,7 +89,7 @@
                 pricesByMonth[month][town].push(price);
             });
 
-            // 3. 计算每个镇子的平均价格
+            // 计算每个镇子的平均价格
             let avgPricesByMonth = {};
             for (let month in pricesByMonth) {
                 avgPricesByMonth[month] = {};
@@ -88,13 +100,11 @@
                 }
             }
 
-            console.log("按月平均价格：", avgPricesByMonth); // 打印按月计算的平均价格
-
             // 获取月份的排序
             let months = Object.keys(avgPricesByMonth).sort((a, b) => parseMonth(a) - parseMonth(b));
 
             // 4. 设置 D3 绘图参数
-            let margin = { top: 40, right: 30, bottom: 100, left: 50 },
+            let margin = { top: 40, right: 30, bottom: 150, left: 50 },
                 width = 2000 - margin.left - margin.right,  // 宽度设置为 2000px
                 height = 1000 - margin.top - margin.bottom; // 高度设置为 1000px
 
@@ -124,7 +134,19 @@
                 .style("font-size", "12px")
                 .style("text-anchor", "middle")
                 .style("transform", "rotate(-45deg)")  // 旋转 X 轴标签，防止重叠
-                .style("transform-origin", "center");
+                .style("transform-origin", "center")
+                .on("mouseover", function(event, d) {
+                    // 显示月份名称
+                    let month = d;
+                    d3.select("#tooltip")
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px")
+                        .style("display", "inline-block")
+                        .html("月份: " + month);
+                })
+                .on("mouseout", function() {
+                    d3.select("#tooltip").style("display", "none");
+                });
 
             // 7. 添加 Y 轴
             svg.append("g")
@@ -133,13 +155,13 @@
 
             // 8. 绘制折线图
             let color = d3.scaleOrdinal(d3.schemeCategory10);
+            let legendData = [];  // 用来保存每个 town 的颜色和名称
+
             towns.forEach((town, index) => {
                 let townData = months.map(month => ({
                     month: month,
                     price: avgPricesByMonth[month][town] || 0
                 }));
-
-                console.log("镇子 " + town + " 的数据：", townData); // 打印每个镇的数据
 
                 let line = d3.line()
                     .x(d => x(d.month) + x.bandwidth() / 2)  // X位置
@@ -158,6 +180,9 @@
                     .on("mouseout", function(event) {
                         d3.select(this).attr("stroke-width", 2);
                     });
+
+                // 保存颜色和名称
+                legendData.push({ town: town, color: color(index) });
 
                 // 绘制点
                 svg.selectAll(".dot-" + town)
@@ -179,6 +204,21 @@
                     .on("mouseout", function() {
                         d3.select("#tooltip").style("display", "none");
                     });
+            });
+
+            // 9. 绘制图例
+            let legend = d3.select("#legend");
+
+            legendData.forEach((d, i) => {
+                let legendItem = legend.append("div")
+                    .attr("class", "legend-item");
+
+                legendItem.append("div")
+                    .attr("class", "legend-color")
+                    .style("background-color", d.color);
+
+                legendItem.append("span")
+                    .text(d.town);
             });
         });
     </script>

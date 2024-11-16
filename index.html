@@ -10,6 +10,11 @@
             fill: none;
             stroke-width: 2;
         }
+        .dot {
+            fill: steelblue;
+            stroke: white;
+            stroke-width: 1.5;
+        }
         .axis path, .axis line {
             fill: none;
             shape-rendering: crispEdges;
@@ -20,12 +25,38 @@
         .legend {
             font-size: 12px;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 <body>
 
 <h2>2012年3月到2013年3月转售价格折线图</h2>
 <svg width="960" height="500"></svg>
+
+<!-- 表格区域 -->
+<h3>数据表格</h3>
+<table id="data-table">
+    <thead>
+        <tr>
+            <th>地区</th>
+            <th>月份</th>
+            <th>平均转售价格</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
 
 <script>
 d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014%20(1).csv").then(function(data) {
@@ -34,6 +65,7 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
 
     const selectedRegions = ["WOODLANDS", "JURONG WEST", "TAMPINES", "YISHUN", "BEDOK", "SENGKANG", "HOUGANG", "ANG MO KIO"];
     
+    // 筛选出特定地区的数据，并且转换日期格式
     data = data.filter(d => selectedRegions.includes(d.town))
                .map(d => {
                    d.month = parseDate(d.month);  // 将日期字段转为 Date 类型
@@ -41,14 +73,14 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
                    return d;
                });
 
-    // 按月对每个地区的数据进行聚合（以每月的总价格为例）
+    // 按月对每个地区的数据进行聚合（以每月的平均价格为例）
     const monthlyData = d3.nest()
         .key(d => d.town) // 按地区分组
         .key(d => d.month.getFullYear() + "/" + (d.month.getMonth() + 1)) // 按年-月分组
         .rollup(values => {
-            // 对每月的数据计算总转售价格
-            const totalPrice = d3.sum(values, d => d.resale_price);
-            return totalPrice;
+            // 对每月的数据计算平均转售价格，四舍五入到小数点后4位
+            const avgPrice = d3.mean(values, d => d.resale_price);
+            return avgPrice.toFixed(4); // 保留小数点后四位
         })
         .entries(data);
 
@@ -71,23 +103,23 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
     const y = d3.scaleLinear()
         .range([height, 0]);
 
-    
+    // 提取数据中的月份和平均转售价格，确保按时间排序
     const allData = [];
     monthlyData.forEach(region => {
         region.values.forEach(d => {
             allData.push({
                 town: region.key,
-                month: parseDate(d.key), 
-                resale_price: d.value 
+                month: parseDate(d.key), // 转换为日期对象
+                resale_price: +d.value // 每月的平均转售价格
             });
         });
     });
 
-    
+    // 根据所有数据的最小和最大值设置 x 和 y 轴的范围
     x.domain(d3.extent(allData, d => d.month));
     y.domain([d3.min(allData, d => d.resale_price), d3.max(allData, d => d.resale_price)]);
 
-    
+    // 绘制 x 轴和 y 轴
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
@@ -97,7 +129,7 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
         .attr("class", "y axis")
         .call(d3.axisLeft(y).ticks(5));
 
-    
+    // 绘制每个地区的折线图
     const line = d3.line()
         .x(d => x(d.month))
         .y(d => y(d.resale_price));
@@ -107,13 +139,23 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
             .data([region.values])
             .attr("class", "line")
             .attr("d", d3.line()
-                .x(d => x(parseDate(d.key))) 
+                .x(d => x(parseDate(d.key))) // 转换日期为时间
                 .y(d => y(d.value))
             )
             .style("stroke", getColor(region.key));
+
+        // 绘制每个数据点
+        svg.selectAll(".dot")
+            .data(region.values)
+            .enter().append("circle")
+            .attr("class", "dot")
+            .attr("cx", d => x(parseDate(d.key)))
+            .attr("cy", d => y(d.value))
+            .attr("r", 5)
+            .style("fill", getColor(region.key));
     });
 
-    
+    // 创建图例
     const legend = svg.selectAll(".legend")
         .data(monthlyData)
         .enter().append("g")
@@ -133,7 +175,7 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
         .style("text-anchor", "end")
         .text(d => d.key);
 
-    
+    // 为每个地区设置不同的颜色
     function getColor(region) {
         const colors = {
             "WOODLANDS": "steelblue",
@@ -147,8 +189,17 @@ d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleF
         };
         return colors[region] || "gray";
     }
+
+    // 将数据表格添加到页面
+    const tableBody = d3.select("#data-table tbody");
+    allData.forEach(d => {
+        tableBody.append("tr")
+            .html(`<td>${d.town}</td><td>${d3.timeFormat("%Y/%m")(d.month)}</td><td>${d.resale_price}</td>`);
+    });
+
 });
 </script>
 
 </body>
 </html>
+

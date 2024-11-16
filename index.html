@@ -1,202 +1,173 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>转售价格折线图</title>
-    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .chart {
+            width: 100%;
+            height: 500px;
+        }
         .line {
             fill: none;
             stroke-width: 2;
         }
-        .dot {
-            fill: steelblue;
-            stroke: white;
-            stroke-width: 1.5;
-        }
-        .axis path, .axis line {
-            fill: none;
-            shape-rendering: crispEdges;
-        }
-        .axis text {
+        .axis-label {
             font-size: 12px;
         }
-        .legend {
-            font-size: 12px;
-        }
-
-        /* Tooltip 样式 */
         .tooltip {
             position: absolute;
-            text-align: center;
-            width: 120px;
-            height: 50px;
-            padding: 8px;
-            font-size: 12px;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0,0,0,0.7);
             color: white;
-            border-radius: 4px;
-            pointer-events: none;
-            opacity: 0;
+            padding: 5px;
+            border-radius: 3px;
+            display: none;
         }
     </style>
 </head>
 <body>
+    <h1>2012年3月到2013年3月各镇子的平均转售价格折线图</h1>
+    <div class="chart" id="chart"></div>
+    <div class="tooltip" id="tooltip"></div>
 
-<h2>2012年3月到2013年3月转售价格折线图</h2>
-<svg width="960" height="500"></svg>
+    <script>
+        // 1. 加载并解析 CSV 数据
+        d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014%20(1).csv").then(function(data) {
+            // 数据预处理
+            let towns = new Set();
+            let pricesByMonth = {};
 
-<!-- Tooltip 元素 -->
-<div class="tooltip" id="tooltip"></div>
+            // 2. 处理数据，按月份和镇子计算平均价格
+            data.forEach(d => {
+                let month = d["Month"];
+                let town = d["Town"];
+                let price = +d["Resale Price"];
 
-<script>
-d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014%20(1).csv").then(function(data) {
+                if (!town || !month || !price) return;
 
-    // 修改日期解析格式为 Nov-13（%b-%y）
-    const parseDate = d3.timeParse("%b-%y");  // "Nov-13" 格式
+                towns.add(town);
 
-    const selectedRegions = ["WOODLANDS", "JURONG WEST", "TAMPINES", "YISHUN", "BEDOK", "SENGKANG", "HOUGANG", "ANG MO KIO"];
-    
-    // 筛选出特定地区的数据，并且转换日期格式
-    data = data.filter(d => selectedRegions.includes(d.town))
-               .map(d => {
-                   d.month = parseDate(d.month);  // 将日期字段转为 Date 类型
-                   d.resale_price = +d.resale_price; // 将价格转为数字
-                   return d;
-               });
+                if (!pricesByMonth[month]) {
+                    pricesByMonth[month] = {};
+                }
+                if (!pricesByMonth[month][town]) {
+                    pricesByMonth[month][town] = [];
+                }
 
-    // 按月对每个地区的数据进行聚合（以每月的平均价格为例）
-    const monthlyData = d3.nest()
-        .key(d => d.town) // 按地区分组
-        .key(d => d.month.getFullYear() + "/" + (d.month.getMonth() + 1)) // 按年-月分组
-        .rollup(values => {
-            // 对每月的数据计算平均转售价格，四舍五入到小数点后4位
-            const avgPrice = d3.mean(values, d => d.resale_price);
-            return avgPrice.toFixed(4); // 保留小数点后四位
-        })
-        .entries(data);
+                pricesByMonth[month][town].push(price);
+            });
 
-    // 设置图表的尺寸和边距
-    const margin = { top: 20, right: 30, bottom: 40, left: 40 };
-    const width = 960 - margin.left - margin.right;
-    const height = 500 - margin.top - margin.bottom;
+            // 3. 计算每个镇子的平均价格
+            let avgPricesByMonth = {};
+            for (let month in pricesByMonth) {
+                avgPricesByMonth[month] = {};
+                for (let town in pricesByMonth[month]) {
+                    let prices = pricesByMonth[month][town];
+                    let avgPrice = d3.mean(prices);
+                    avgPricesByMonth[month][town] = avgPrice;
+                }
+            }
 
-    // 创建 SVG 容器
-    const svg = d3.select("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            // 获取月份的排序
+            let months = Object.keys(avgPricesByMonth).sort((a, b) => new Date(a) - new Date(b));
 
-    // 设置 x 和 y 轴的比例尺
-    const x = d3.scaleTime()
-        .range([0, width]);
+            // 4. 设置 D3 绘图参数
+            let margin = { top: 40, right: 30, bottom: 60, left: 50 },
+                width = 800 - margin.left - margin.right,
+                height = 500 - margin.top - margin.bottom;
 
-    const y = d3.scaleLinear()
-        .range([height, 0]);
+            let svg = d3.select("#chart").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // 提取数据中的月份和平均转售价格，确保按时间排序
-    const allData = [];
-    monthlyData.forEach(region => {
-        region.values.forEach(d => {
-            allData.push({
-                town: region.key,
-                month: parseDate(d.key), // 转换为日期对象
-                resale_price: +d.value // 每月的平均转售价格
+            // 5. 创建 x 和 y 轴比例尺
+            let x = d3.scaleBand()
+                .domain(months)
+                .range([0, width])
+                .padding(0.1);
+
+            let y = d3.scaleLinear()
+                .domain([0, d3.max(Object.values(avgPricesByMonth).map(townData => d3.max(Object.values(townData))))])
+                .nice()
+                .range([height, 0]);
+
+            // 6. 添加 x 和 y 轴
+            svg.append("g")
+                .selectAll(".x-axis")
+                .data(months)
+                .enter()
+                .append("text")
+                .attr("x", d => x(d) + x.bandwidth() / 2)
+                .attr("y", height + 20)
+                .attr("text-anchor", "middle")
+                .text(d => d);
+
+            svg.append("g")
+                .selectAll(".y-axis")
+                .data([0, d3.max(Object.values(avgPricesByMonth).map(townData => d3.max(Object.values(townData))))])
+                .enter()
+                .append("line")
+                .attr("x1", 0)
+                .attr("y1", y)
+                .attr("x2", width)
+                .attr("y2", y)
+                .attr("stroke", "black");
+
+            // 7. 绘制折线
+            let color = d3.scaleOrdinal(d3.schemeCategory10);
+            towns.forEach((town, index) => {
+                let line = d3.line()
+                    .x(d => x(d.month) + x.bandwidth() / 2)
+                    .y(d => y(d.price));
+
+                let townData = months.map(month => ({
+                    month: month,
+                    price: avgPricesByMonth[month][town] || 0
+                }));
+
+                svg.append("path")
+                    .data([townData])
+                    .attr("class", "line")
+                    .attr("d", line)
+                    .attr("stroke", color(index))
+                    .attr("stroke-width", 2)
+                    .attr("fill", "none")
+                    .on("mouseover", function(event) {
+                        d3.select(this).attr("stroke-width", 4);
+                    })
+                    .on("mouseout", function(event) {
+                        d3.select(this).attr("stroke-width", 2);
+                    });
+
+                svg.selectAll(".dot-" + town)
+                    .data(townData)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "dot")
+                    .attr("cx", d => x(d.month) + x.bandwidth() / 2)
+                    .attr("cy", d => y(d.price))
+                    .attr("r", 4)
+                    .attr("fill", color(index))
+                    .on("mouseover", function(event, d) {
+                        d3.select("#tooltip")
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 28) + "px")
+                            .style("display", "inline-block")
+                            .html(town + " - " + d.month + "<br/>" + "转售价格: " + d.price.toLocaleString());
+                    })
+                    .on("mouseout", function() {
+                        d3.select("#tooltip").style("display", "none");
+                    });
             });
         });
-    });
-
-    // 根据所有数据的最小和最大值设置 x 和 y 轴的范围
-    x.domain(d3.extent(allData, d => d.month));
-    y.domain([d3.min(allData, d => d.resale_price), d3.max(allData, d => d.resale_price)]);
-
-    // 绘制 x 轴和 y 轴
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x).ticks(d3.timeMonth));
-
-    svg.append("g")
-        .attr("class", "y axis")
-        .call(d3.axisLeft(y).ticks(5));
-
-    // 绘制每个地区的折线图
-    const line = d3.line()
-        .x(d => x(d.month))
-        .y(d => y(d.resale_price));
-
-    monthlyData.forEach(region => {
-        svg.append("path")
-            .data([region.values])
-            .attr("class", "line")
-            .attr("d", d3.line()
-                .x(d => x(parseDate(d.key))) // 转换日期为时间
-                .y(d => y(d.value))
-            )
-            .style("stroke", getColor(region.key));
-
-        // 绘制每个数据点并添加鼠标悬停事件
-        svg.selectAll(".dot")
-            .data(region.values)
-            .enter().append("circle")
-            .attr("class", "dot")
-            .attr("cx", d => x(parseDate(d.key)))
-            .attr("cy", d => y(d.value))
-            .attr("r", 5)
-            .style("fill", getColor(region.key))
-            .on("mouseover", function(event, d) {
-                // 显示 tooltip
-                const tooltip = d3.select("#tooltip");
-                tooltip.transition().duration(200).style("opacity", 0.9);
-                tooltip.html(`${d.key}<br/>${d3.timeFormat("%b-%y")(parseDate(d.key))}<br/>Avg Price: ${d.value}`)
-                    .style("left", (event.pageX + 5) + "px")
-                    .style("top", (event.pageY - 28) + "px");
-            })
-            .on("mouseout", function() {
-                // 隐藏 tooltip
-                d3.select("#tooltip").transition().duration(200).style("opacity", 0);
-            });
-    });
-
-    // 创建图例
-    const legend = svg.selectAll(".legend")
-        .data(monthlyData)
-        .enter().append("g")
-        .attr("class", "legend")
-        .attr("transform", (d, i) => "translate(0," + i * 20 + ")");
-
-    legend.append("rect")
-        .attr("x", width - 18)
-        .attr("width", 18)
-        .attr("height", 18)
-        .style("fill", d => getColor(d.key));
-
-    legend.append("text")
-        .attr("x", width - 24)
-        .attr("y", 9)
-        .attr("dy", ".35em")
-        .style("text-anchor", "end")
-        .text(d => d.key);
-
-    // 为每个地区设置不同的颜色
-    function getColor(region) {
-        const colors = {
-            "WOODLANDS": "steelblue",
-            "JURONG WEST": "green",
-            "TAMPINES": "orange",
-            "YISHUN": "red",
-            "BEDOK": "purple",
-            "SENGKANG": "brown",
-            "HOUGANG": "pink",
-            "ANG MO KIO": "yellow"
-        };
-        return colors[region] || "gray";
-    }
-
-});
-</script>
-
+    </script>
 </body>
 </html>

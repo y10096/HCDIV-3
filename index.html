@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Average Resale Price Line Chart7</title>
+    <title>Average Resale Price Line Chart8</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
@@ -48,7 +48,7 @@
     </style>
 </head>
 <body>
-    <h1>Average Resale Prices by Town, March 2012 to March 2013 Line Chart7</h1>
+    <h1>Average Resale Prices by Town, March 2012 to March 2013 Line Chart8</h1>
     <div class="chart" id="chart"></div>
     <div class="tooltip" id="tooltip"></div>
     <div id="legend" class="legend"></div>
@@ -119,10 +119,10 @@
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             // 5. 创建 x 和 y 轴比例尺
-            let x = d3.scaleBand()
+            let x = d3.scalePoint()
                 .domain(months)
                 .range([0, width])
-                .padding(0.1);
+                .padding(0.5);
 
             let y = d3.scaleLinear()
                 .domain([0, d3.max(Object.values(avgPricesByMonth).map(townData => d3.max(Object.values(townData))))])
@@ -133,24 +133,7 @@
             svg.append("g")
                 .attr("class", "x-axis")
                 .attr("transform", "translate(0," + height + ")")
-                .call(d3.axisBottom(x))
-                .selectAll("text")
-                .style("font-size", "12px")
-                .style("text-anchor", "middle")
-                .style("transform", "rotate(-45deg)")  // 旋转 X 轴标签，防止重叠
-                .style("transform-origin", "center")
-                .on("mouseover", function(event, d) {
-                    // 显示月份名称
-                    let month = d;
-                    d3.select("#tooltip")
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px")
-                        .style("display", "inline-block")
-                        .html("月份: " + month);
-                })
-                .on("mouseout", function() {
-                    d3.select("#tooltip").style("display", "none");
-                });
+                .call(d3.axisBottom(x));
 
             // 7. 添加 Y 轴
             svg.append("g")
@@ -168,7 +151,7 @@
                 }));
 
                 let line = d3.line()
-                    .x(d => x(d.month) + x.bandwidth() / 2)  // X位置
+                    .x(d => x(d.month))  // X位置
                     .y(d => y(d.price));  // Y位置（价格）
 
                 svg.append("path")
@@ -194,7 +177,7 @@
                     .enter()
                     .append("circle")
                     .attr("class", "dot")
-                    .attr("cx", d => x(d.month) + x.bandwidth() / 2)
+                    .attr("cx", d => x(d.month))
                     .attr("cy", d => y(d.price))
                     .attr("r", 4)
                     .attr("fill", color(index))
@@ -203,7 +186,7 @@
                             .style("left", (event.pageX + 10) + "px")
                             .style("top", (event.pageY - 28) + "px")
                             .style("display", "inline-block")
-                            .html(town + " - " + d.month + "<br/>" + "转售价格: " + d.price.toLocaleString());
+                            .html(town + " - " + d.month + "<br/>" + "平均转售价格: " + d.price.toLocaleString());
                     })
                     .on("mouseout", function() {
                         d3.select("#tooltip").style("display", "none");
@@ -228,4 +211,3 @@
     </script>
 </body>
 </html>
-

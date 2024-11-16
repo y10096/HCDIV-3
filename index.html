@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Average resale price bar chart2.0</title>
+    <title>Average Resale Price Line Chart</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
@@ -29,7 +29,7 @@
     </style>
 </head>
 <body>
-    <h1>Average Resale Prices by Town, March 2012 to March 2013 Bar Chart</h1>
+    <h1>Average Resale Prices by Town, March 2012 to March 2013 Line Chart</h1>
     <div class="chart" id="chart"></div>
     <div class="tooltip" id="tooltip"></div>
 
@@ -128,7 +128,7 @@
                 .attr("class", "y-axis")
                 .call(d3.axisLeft(y));
 
-            // 8. 绘制柱状图
+            // 8. 绘制折线图
             let color = d3.scaleOrdinal(d3.schemeCategory10);
             towns.forEach((town, index) => {
                 let townData = months.map(month => ({
@@ -138,16 +138,34 @@
 
                 console.log("镇子 " + town + " 的数据：", townData); // 打印每个镇的数据
 
-                svg.selectAll(".bar-" + town)
+                let line = d3.line()
+                    .x(d => x(d.month) + x.bandwidth() / 2)  // X位置
+                    .y(d => y(d.price));  // Y位置（价格）
+
+                svg.append("path")
+                    .data([townData])
+                    .attr("class", "line")
+                    .attr("d", line)
+                    .attr("stroke", color(index))  // 设置线条颜色
+                    .attr("stroke-width", 2)
+                    .attr("fill", "none")
+                    .on("mouseover", function(event) {
+                        d3.select(this).attr("stroke-width", 4);
+                    })
+                    .on("mouseout", function(event) {
+                        d3.select(this).attr("stroke-width", 2);
+                    });
+
+                // 绘制点
+                svg.selectAll(".dot-" + town)
                     .data(townData)
                     .enter()
-                    .append("rect")
-                    .attr("class", "bar")
-                    .attr("x", d => x(d.month))  // X位置
-                    .attr("y", d => y(d.price))  // Y位置（价格）
-                    .attr("width", x.bandwidth())  // 宽度
-                    .attr("height", d => height - y(d.price))  // 高度
-                    .attr("fill", color(index))  // 填充颜色
+                    .append("circle")
+                    .attr("class", "dot")
+                    .attr("cx", d => x(d.month) + x.bandwidth() / 2)
+                    .attr("cy", d => y(d.price))
+                    .attr("r", 4)
+                    .attr("fill", color(index))
                     .on("mouseover", function(event, d) {
                         d3.select("#tooltip")
                             .style("left", (event.pageX + 10) + "px")

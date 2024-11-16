@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
@@ -12,8 +12,7 @@
         }
         .chart {
             width: 100%;
-            height: 600px; /* 高度调整为 600px */
-            margin: 0 auto; /* 居中 */
+            height: 1000px; /* 高度调整为原来的两倍 */
         }
         .line {
             fill: none;
@@ -44,13 +43,13 @@
             let towns = new Set();
             let pricesByMonth = {};
 
-            // 2. 过滤数据，选择2012年3月到2013年3月的数据
+            // 2. 处理数据，按月份和镇子计算平均价格
+            // 只保留2012年3月到2013年3月的数据
             let filteredData = data.filter(d => {
                 let month = new Date(d["month"]);
                 return month >= new Date("2012-03-01") && month <= new Date("2013-03-31");
             });
 
-            // 3. 处理数据，按月份和镇子计算平均价格
             filteredData.forEach(d => {
                 let month = d["month"];
                 let town = d["town"];
@@ -70,7 +69,7 @@
                 pricesByMonth[month][town].push(price);
             });
 
-            // 4. 计算每个镇子的平均价格
+            // 3. 计算每个镇子的平均价格
             let avgPricesByMonth = {};
             for (let month in pricesByMonth) {
                 avgPricesByMonth[month] = {};
@@ -84,10 +83,10 @@
             // 获取月份的排序
             let months = Object.keys(avgPricesByMonth).sort((a, b) => new Date(a) - new Date(b));
 
-            // 5. 设置 D3 绘图参数
+            // 4. 设置 D3 绘图参数
             let margin = { top: 40, right: 30, bottom: 60, left: 50 },
-                width = 1000 - margin.left - margin.right,  // 图表宽度
-                height = 500 - margin.top - margin.bottom;  // 图表高度
+                width = 2000 - margin.left - margin.right,  // 宽度设置为 200% 或者 2000px
+                height = 1000 - margin.top - margin.bottom; // 高度设置为 1000px
 
             let svg = d3.select("#chart").append("svg")
                 .attr("width", width + margin.left + margin.right)
@@ -95,7 +94,7 @@
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            // 6. 创建 x 和 y 轴比例尺
+            // 5. 创建 x 和 y 轴比例尺
             let x = d3.scaleBand()
                 .domain(months)
                 .range([0, width])
@@ -106,7 +105,7 @@
                 .nice()
                 .range([height, 0]);
 
-            // 7. 添加 x 和 y 轴
+            // 6. 添加 x 轴
             svg.append("g")
                 .selectAll(".x-axis")
                 .data(months)
@@ -117,19 +116,13 @@
                 .attr("text-anchor", "middle")
                 .text(d => d)
                 .style("font-size", "12px")
-                .style("transform", "rotate(-45deg)")  // 旋转x轴标签，避免重叠
+                .style("transform", "rotate(-45deg)")  // 旋转标签，避免重叠
                 .style("transform-origin", "center");
 
-            // 绘制 Y 轴
+            // 7. 添加 y 轴
             svg.append("g")
-                .attr("class", "y-axis")
-                .call(d3.axisLeft(y))  // 使用d3.axisLeft来创建左侧的Y轴
-                .append("text")
-                .attr("x", -40)
-                .attr("y", -20)
-                .attr("text-anchor", "middle")
-                .style("font-size", "14px")
-                .text("平均转售价格");
+                .call(d3.axisLeft(y))  // 使用d3的axisLeft绘制y轴
+                .attr("class", "y-axis");
 
             // 8. 绘制折线
             let color = d3.scaleOrdinal(d3.schemeCategory10);

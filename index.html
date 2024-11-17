@@ -161,6 +161,10 @@
                     .attr("stroke", color(index))  
                     .attr("stroke-width", 2)
                     .attr("fill", "none")
+                    .attr("stroke-dasharray", "5,5")  
+                    .transition()  
+                    .duration(1000)
+                    .attr("stroke-dasharray", "0,0")  
                     .on("mouseover", function(event) {
                         d3.select(this).attr("stroke-width", 4);
                     })
@@ -181,6 +185,10 @@
                     .attr("cy", d => y(d.price))
                     .attr("r", 4)
                     .attr("fill", color(index))
+                    .style("opacity", 0)
+                    .transition()
+                    .duration(2000)
+                    .style("opacity", 1)
                     .on("mouseover", function(event, d) {
                         d3.select("#tooltip")
                             .style("left", (event.pageX + 10) + "px")

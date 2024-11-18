@@ -102,7 +102,7 @@
         p {
             text-align: left;  /* 说明文字左对齐 */
             margin-left: 20px;  /* 增加一点左边距 */
-            font-size: 18px;
+            font-size: 20px;
         }
     </style>
 </head>
@@ -196,10 +196,11 @@
                 .call(d3.axisBottom(x));
 
             
+            // 修改 Y 轴，添加 "$" 符号
             svg.append("g")
                 .attr("class", "y-axis")
-                .call(d3.axisLeft(y).ticks(10));
-            
+                .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format("$,.0f")));  // 这里使用了 d3.format 加入 "$" 符号并格式化为千位分隔符
+
             let color = d3.scaleOrdinal(d3.schemeCategory10);
             let legendData = [];  
 

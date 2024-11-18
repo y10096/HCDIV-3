@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Average Resale Price Line Chart</title>
+    <title>Average Resale Prices by Top 6 Town, March 2012 to March 2013 Line Chart</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body {
@@ -45,10 +45,14 @@
             font-size: 12px;
             text-anchor: middle;
         }
+        .y-axis text {
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
     <h1>Average Resale Prices by Top 6 Town, March 2012 to March 2013 Line Chart</h1>
+    <p>该研究旨在调查出一年中的各个时期和地区对房屋转售价格的影响，这里选用了2012年3月到2013年间，交易数量最高的六个地区的数据进行研究。</p>
     <div class="chart" id="chart"></div>
     <div class="tooltip" id="tooltip"></div>
     <div id="legend" class="legend"></div>
@@ -138,7 +142,18 @@
             
             svg.append("g")
                 .attr("class", "y-axis")
-                .call(d3.axisLeft(y));
+                .call(d3.axisLeft(y).ticks(10));
+
+            
+            // 添加Y轴单位标注
+            svg.select(".y-axis")
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -40)
+                .attr("x", -height / 2)
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .text("价格 (单位: SGD)");
 
             
             let color = d3.scaleOrdinal(d3.schemeCategory10);

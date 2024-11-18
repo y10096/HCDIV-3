@@ -48,6 +48,11 @@
         .y-axis text {
             font-size: 12px;
         }
+        p {
+            text-align: left;  /* 使说明文字左对齐 */
+            margin-left: 20px;  /* 增加一点左边距 */
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -120,7 +125,7 @@
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                .attr("transform", "translate(" + (margin.left + 50) + "," + margin.top + ")");  // 向右移动 50px (约5个字符)
 
             
             let x = d3.scalePoint()

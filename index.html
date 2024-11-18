@@ -108,7 +108,9 @@
 </head>
 <body>
     <h1>Average Resale Prices by Top 6 Town, March 2012 to March 2013 Line Chart</h1>
-    <p>The aim of the study was to investigate the impact of periods and regions of the year on the resale price of a home, and data from the six regions with the highest number of transactions between March 2012 and 2013 were chosen for the study here.</p>
+    <p>The aim of the study was to investigate the impact of periods and regions of the year on the resale price of a home, and data from the six regions with the highest number of transactions 
+        between March 2012 and 2013 were chosen for the study here.
+        per house/SGD</p>
     <div class="chart" id="chart"></div>
     <div class="tooltip" id="tooltip"></div>
     <div id="legend" class="legend"></div>
@@ -199,17 +201,6 @@
             svg.append("g")
                 .attr("class", "y-axis")
                 .call(d3.axisLeft(y).ticks(10));
-
-            // Add Y-axis label at the 550000 mark
-            svg.append("text")
-                .attr("class", "y-axis-label")
-                .attr("x", -height / 2)  // Center the label vertically
-                .attr("y", y(550000))  // Set the y position to be at 550000
-                .attr("transform", "rotate(-90)")  // Rotate the text to be vertical
-                .style("text-anchor", "middle")
-                .style("font-size", "14px")
-                .text("per house/SGD");  // Add the label text
-
             
             let color = d3.scaleOrdinal(d3.schemeCategory10);
             let legendData = [];  

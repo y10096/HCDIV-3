@@ -10,46 +10,97 @@
             font-family: Arial, sans-serif;
             margin: 20px;
             text-align: center;
+            background: #f0f0f0;
+            animation: fadeInBackground 3s ease-in-out; /* 背景渐变效果 */
         }
+
+        /* 页面渐变背景 */
+        @keyframes fadeInBackground {
+            0% {
+                background: #f0f0f0; /* 初始背景颜色 */
+            }
+            100% {
+                background: #ffffff; /* 最终背景颜色 */
+            }
+        }
+
+        /* 控制各个元素渐显效果 */
+        h1, p, .chart, #legend {
+            opacity: 0;
+            animation: fadeInElement 2s forwards;
+        }
+
+        h1 {
+            animation-delay: 0.5s; /* 标题渐显延迟 */
+        }
+
+        p {
+            animation-delay: 1s; /* 说明文字渐显延迟 */
+        }
+
         .chart {
             width: 70%;
             height: 700px;
+            margin-top: 20px;
+            animation-delay: 1.5s; /* 图表渐显延迟 */
         }
+
+        #legend {
+            animation-delay: 2s; /* 图例渐显延迟 */
+        }
+
+        /* 动画效果 */
+        @keyframes fadeInElement {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
         .axis-label {
             font-size: 12px;
         }
+
         .tooltip {
             position: absolute;
-            background-color: rgba(0,0,0,0.7);
+            background-color: rgba(0, 0, 0, 0.7);
             color: white;
             padding: 5px;
             border-radius: 3px;
             display: none;
         }
+
         .legend {
             display: flex;
             justify-content: center;
             margin-top: 30px;
         }
+
         .legend-item {
             display: flex;
             align-items: center;
             margin: 0 10px;
         }
+
         .legend-color {
             width: 15px;
             height: 15px;
             margin-right: 5px;
         }
+
         .x-axis text {
             font-size: 12px;
             text-anchor: middle;
         }
+
         .y-axis text {
             font-size: 12px;
         }
+
         p {
-            text-align: left;  /* 使说明文字左对齐 */
+            text-align: left;  /* 说明文字左对齐 */
             margin-left: 20px;  /* 增加一点左边距 */
             font-size: 14px;
         }
@@ -148,6 +199,16 @@
             svg.append("g")
                 .attr("class", "y-axis")
                 .call(d3.axisLeft(y).ticks(10));
+
+            // Add Y-axis label
+            svg.append("text")
+                .attr("class", "y-axis-label")
+                .attr("x", -height / 2)  // Center the label vertically
+                .attr("y", -margin.left + 20)  // Place it above the Y-axis
+                .attr("transform", "rotate(-90)")  // Rotate the text to be vertical
+                .style("text-anchor", "middle")
+                .style("font-size", "14px")
+                .text("per house/SGD");  // Add the label text
 
             
             let color = d3.scaleOrdinal(d3.schemeCategory10);

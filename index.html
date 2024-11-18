@@ -11,45 +11,45 @@
             margin: 20px;
             text-align: center;
             background: #f0f0f0;
-            animation: fadeInBackground 3s ease-in-out; /* 背景渐变效果 */
+            animation: fadeInBackground 3s ease-in-out;
         }
 
-        /* 页面渐变背景 */
+        
         @keyframes fadeInBackground {
             0% {
-                background: #f0f0f0; /* 初始背景颜色 */
+                background: #f0f0f0; 
             }
             100% {
-                background: #ffffff; /* 最终背景颜色 */
+                background: #ffffff;
             }
         }
 
-        /* 控制各个元素渐显效果 */
+
         h1, p, .chart, #legend {
             opacity: 0;
             animation: fadeInElement 2s forwards;
         }
 
         h1 {
-            animation-delay: 0.5s; /* 标题渐显延迟 */
+            animation-delay: 0.5s; 
         }
 
         p {
-            animation-delay: 1s; /* 说明文字渐显延迟 */
+            animation-delay: 1s;
         }
 
         .chart {
             width: 70%;
             height: 700px;
             margin-top: 20px;
-            animation-delay: 1.5s; /* 图表渐显延迟 */
+            animation-delay: 1.5s;
         }
 
         #legend {
-            animation-delay: 2s; /* 图例渐显延迟 */
+            animation-delay: 2s;
         }
 
-        /* 动画效果 */
+   
         @keyframes fadeInElement {
             0% {
                 opacity: 0;
@@ -100,8 +100,8 @@
         }
 
         p {
-            text-align: left;  /* 说明文字左对齐 */
-            margin-left: 20px;  /* 增加一点左边距 */
+            text-align: left; 
+            margin-left: 20px; 
             font-size: 20px;
         }
     </style>
@@ -117,7 +117,7 @@
         
         d3.csv("https://raw.githubusercontent.com/y10096/HCDIV-3/refs/heads/main/ResaleFlatPricesBasedonRegistrationDateFromMar2012toDec2014%20(1).csv").then(function(data) {
             
-            let parseMonth = d3.timeParse("%b-%y");  // %b-%y: "Mar-12", "May-12"等
+            let parseMonth = d3.timeParse("%b-%y");
             let startDate = parseMonth("Mar-12");
             let endDate = parseMonth("Mar-13");
 
@@ -176,7 +176,7 @@
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
-                .attr("transform", "translate(" + (margin.left + 50) + "," + margin.top + ")");  // 向右移动 50px (约5个字符)
+                .attr("transform", "translate(" + (margin.left + 50) + "," + margin.top + ")");  
 
             
             let x = d3.scalePoint()
@@ -196,10 +196,10 @@
                 .call(d3.axisBottom(x));
 
             
-            // 修改 Y 轴，添加 "$" 符号
+           
             svg.append("g")
                 .attr("class", "y-axis")
-                .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format("$,.0f")));  // 这里使用了 d3.format 加入 "$" 符号并格式化为千位分隔符
+                .call(d3.axisLeft(y).ticks(10).tickFormat(d3.format("$,.0f"))); 
 
             let color = d3.scaleOrdinal(d3.schemeCategory10);
             let legendData = [];  

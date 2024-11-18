@@ -145,17 +145,6 @@
                 .call(d3.axisLeft(y).ticks(10));
 
             
-            // 添加Y轴单位标注
-            svg.select(".y-axis")
-                .append("text")
-                .attr("transform", "rotate(-90)")
-                .attr("y", -40)
-                .attr("x", -height / 2)
-                .attr("dy", "1em")
-                .style("text-anchor", "middle")
-                .text("价格 (单位: SGD)");
-
-            
             let color = d3.scaleOrdinal(d3.schemeCategory10);
             let legendData = [];  
 
